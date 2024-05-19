@@ -1,0 +1,9 @@
+#navbar {
+  border: 1px solid #36454f;
+  background-color: #36454f;
+  color: white;
+  padding: 20px;
+
+  display: flex;
+  gap: 20px;
+}

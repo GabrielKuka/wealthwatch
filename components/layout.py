@@ -1,3 +1,9 @@
-from dash import html
+import dash_bootstrap_components as dbc
 
-layout = [html.Div(id="wrapper", children="Some Text")]
+from components import dashboard, navbar
+
+layout = [
+    dbc.Container(
+        id="wrapper", fluid=True, children=[navbar.navbar, dashboard.layout]
+    )
+]

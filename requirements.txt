@@ -1,4 +1,6 @@
 dash==2.17.0
-pandas==2.2.2
-dash-bootstrap-components==1.6.0
+pandas==2.0.3
+dash-bootstrap-components[pandas]==1.6.0
 SQLAlchemy==2.0.30
+psycopg2-binary==2.9.9
+plotly-express==0.4.1
