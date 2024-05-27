@@ -30,15 +30,30 @@ layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         [
-                            dcc.DatePickerRange(
-                                id="date_range",
-                                min_date_allowed=date(2020, 1, 1),
-                                start_date=date(
-                                    datetime.now().year,
-                                    datetime.now().month,
-                                    1,
-                                ),
-                                end_date=datetime.now(),
+                            html.Div(
+                                children=[
+                                    dcc.DatePickerRange(
+                                        id="date_range",
+                                        min_date_allowed=date(2020, 1, 1),
+                                        start_date=date(
+                                            datetime.now().year,
+                                            datetime.now().month,
+                                            1,
+                                        ),
+                                        end_date=datetime.now(),
+                                        style={"flex-basis": "80%"},
+                                    ),
+                                    dbc.Select(
+                                        id="currency_for_expenses_bar_chart",
+                                        style={"flex-basis": "20%"},
+                                        value="EUR",
+                                        options=["EUR", "BGN", "USD", "ALL"],
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "flex-direction": "row",
+                                },
                             ),
                             dcc.Graph(id="expenses_bar_chart"),
                         ],
@@ -57,7 +72,7 @@ layout = dbc.Container(
                                 id="purchases_by_currency_date_range",
                                 min_date_allowed=date(2020, 1, 1),
                                 start_date=date(
-                                    datetime.now().year-1,
+                                    datetime.now().year - 1,
                                     datetime.now().month,
                                     datetime.now().day,
                                 ),
@@ -67,7 +82,7 @@ layout = dbc.Container(
                         ],
                         style={"display": "flex", "flex-direction": "column"},
                     ),
-                    width=4
+                    width=4,
                 )
             ]
         ),

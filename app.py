@@ -1,12 +1,14 @@
+import os
+
 import dash_bootstrap_components as dbc
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, dash_table, html, no_update
 from dash.exceptions import PreventUpdate
 from sqlalchemy import create_engine, text
-import plotly.express as px
-import os
 
+from APIs.currency_api import CurrencyAPI
 from components import layout
 
 # Warehouse connection
@@ -21,6 +23,7 @@ pg_connection_string = (
     f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
 )
 
+currency_api = None
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -100,23 +103,24 @@ def currency_pie_chart(selected_user, start_date, end_date):
     Output("expenses_bar_chart", "figure"),
     [
         Input("users_dropdown", "value"),
+        Input("currency_for_expenses_bar_chart", "value"),
         Input("date_range", "start_date"),
         Input("date_range", "end_date"),
     ],
 )
-def expenses_by_category_chart(selected_user, start_date, end_date):
-    if not (selected_user and start_date and end_date):
+def expenses_by_category_chart(selected_user, currency, start_date, end_date):
+    if not (selected_user and start_date and end_date and currency):
         return PreventUpdate
 
     query = text(
         """ 
-            SELECT c.category, SUM(t.amount) as Sum FROM fact_transactions AS t
+            SELECT c.category, SUM(t.amount) as amount, a.currency FROM fact_transactions AS t
             INNER JOIN dim_user as u ON u.id = t.user_id
             INNER JOIN dim_account as a ON a.id = t.from_account_id
             INNER JOIN dim_category as c ON c.id = t.category_id
             WHERE u.email = :selected_user AND t.to_account_id IS NULL
             AND t.date >= :start_date AND t.date <= :end_date
-            AND a.currency = 'BGN' GROUP BY c.category;
+            GROUP BY c.category, a.currency;
 
         """
     )
@@ -132,11 +136,32 @@ def expenses_by_category_chart(selected_user, start_date, end_date):
             },
         )
 
+        df[f"amount_{currency.lower()}"] = df.apply(
+            lambda row: currency_api.convert(
+                row["currency"], currency, row["amount"]
+            ),
+            axis=1,
+        )
+        df = df.drop(columns=["amount"])
+        df = (
+            df.groupby("category")[f"amount_{currency.lower()}"]
+            .sum()
+            .reset_index()
+        )
+
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=df["category"], y=df["sum"]))
-        fig.update_layout(title="Expenses by category")
+        fig.add_trace(
+            go.Bar(x=df["category"], y=df[f"amount_{currency.lower()}"])
+        )
+        fig.update_layout(
+            title="Expenses by category", yaxis=dict(tickformat=",")
+        )
 
         return fig
+
+
+def format_number(num):
+    return f"{num:,.2f}"
 
 
 @app.callback(
@@ -184,5 +209,7 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 if __name__ == "__main__":
 
     engine = create_engine(pg_connection_string)
+
+    currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
     app.run(debug=True, host="0.0.0.0", port=8992)
