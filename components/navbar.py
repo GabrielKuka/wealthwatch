@@ -8,5 +8,13 @@ navbar = dbc.Nav(
         dbc.NavItem(
             dbc.Select(id="users_dropdown", placeholder="Select user"),
         ),
+        dbc.NavItem(
+            dbc.Select(
+                id="currency_dropdown",
+                style={"flexBasis": "20%"},
+                value="EUR",
+                options=["EUR", "BGN", "USD", "ALL"],
+            ),
+        ),
     ],
 )

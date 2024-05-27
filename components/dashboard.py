@@ -41,23 +41,12 @@ layout = dbc.Container(
                                             1,
                                         ),
                                         end_date=datetime.now(),
-                                        style={"flex-basis": "80%"},
-                                    ),
-                                    dbc.Select(
-                                        id="currency_for_expenses_bar_chart",
-                                        style={"flex-basis": "20%"},
-                                        value="EUR",
-                                        options=["EUR", "BGN", "USD", "ALL"],
                                     ),
                                 ],
-                                style={
-                                    "display": "flex",
-                                    "flex-direction": "row",
-                                },
                             ),
                             dcc.Graph(id="expenses_bar_chart"),
                         ],
-                        style={"display": "flex", "flex-direction": "column"},
+                        style={"display": "flex", "flexDirection": "column"},
                     ),
                     width="4",
                 ),
@@ -80,10 +69,36 @@ layout = dbc.Container(
                             ),
                             dcc.Graph(id="purchases_by_currency_pie_chart"),
                         ],
-                        style={"display": "flex", "flex-direction": "column"},
+                        style={"display": "flex", "flexDirection": "column"},
                     ),
                     width=4,
-                )
+                ),
+                dbc.Col(
+                    html.Div(
+                        [
+                            dcc.DatePickerRange(
+                                id="date_range_sankey",
+                                display_format="MM/YYYY",
+                                start_date=date(
+                                    datetime.now().year,
+                                    datetime.now().month,
+                                    1,
+                                ),
+                                end_date=datetime.now(),
+                            ),
+                            html.Div(
+                                "Incomes vs Expenses for the selected timeframe."
+                            ),
+                            dcc.Graph(id="incomes_and_expenses_sankey"),
+                        ],
+                        style={
+                            "display": "flex",
+                            "flexDirection": "column",
+                            "gap": "10px",
+                        },
+                    ),
+                    width=8,
+                ),
             ]
         ),
     ],
