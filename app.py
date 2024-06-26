@@ -36,8 +36,8 @@ app.layout = layout.layout
     [Input("users_dropdown", "options")],
 )
 def populate_users_dropdown(arg):
-    if not engine:
-        raise PreventUpdate
+
+    engine = create_engine(pg_connection_string)
 
     with engine.begin() as conn:
         cursor = conn.execute(text("SELECT email from dim_user;"))
@@ -56,8 +56,8 @@ def populate_users_dropdown(arg):
     ],
 )
 def currency_pie_chart(selected_user, start_date, end_date):
-    if not engine:
-        return PreventUpdate
+
+    engine = create_engine(pg_connection_string)
 
     with engine.begin() as conn:
         query = text(
@@ -112,6 +112,8 @@ def currency_pie_chart(selected_user, start_date, end_date):
 def incomes_and_expenses_sankey(selected_user, start_date, end_date, currency):
     if not (selected_user and start_date and end_date and currency):
         raise PreventUpdate
+
+    engine = create_engine(pg_connection_string)
 
     incomes_query = text(
         """
@@ -297,6 +299,8 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
     if not (selected_user and start_date and end_date and currency):
         raise PreventUpdate
 
+    engine = create_engine(pg_connection_string)
+
     query = text(
         """ 
             SELECT c.category, SUM(t.amount) as amount, a.currency FROM fact_transactions AS t
@@ -355,8 +359,8 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
     ],
 )
 def recent_transactions(arg, selected_user, start_date, end_date):
-    if not engine:
-        raise PreventUpdate
+
+    engine = create_engine(pg_connection_string)
 
     query = text(
         """ 
@@ -388,8 +392,6 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 
 
 if __name__ == "__main__":
-
-    engine = create_engine(pg_connection_string)
 
     currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
