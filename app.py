@@ -24,7 +24,8 @@ pg_connection_string = (
     f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
 )
 
-currency_api = None
+#currency_api = None
+currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -446,7 +447,5 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 
 
 if __name__ == "__main__":
-
-    currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
     app.run(debug=True, host="0.0.0.0", port=8992)

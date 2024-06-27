@@ -1,5 +1,5 @@
 import requests
-from cachetools import TTLCache, cached
+import threading, time
 
 
 class CurrencyAPI:
@@ -9,8 +9,17 @@ class CurrencyAPI:
         self.__ENDPOINT = (
             f"{self.__BASE_URL}/latest.json?app_id={self.__API_KEY}"
         )
+        self.__rates = self._get_exchange_rates()
 
-    @cached(cache=TTLCache(maxsize=1, ttl=(60 * 60 * 4)))
+        self._refresh_rates_thread = threading.Thread(target=self._refresh_exchange_rates, daemon=True)
+        self._refresh_rates_thread.start()
+    
+    def _refresh_exchange_rates(self):
+        # Refresh exchange rates every 4 hours
+        while True:
+            time.sleep(4 * 60 * 60)
+            self.__rates = self._get_exchange_rates()
+    
     def _get_exchange_rates(self):
         try:
             response = requests.get(self.__ENDPOINT)
@@ -26,14 +35,13 @@ class CurrencyAPI:
         if from_currency == to_currency:
             return amount
 
-        rates = self._get_exchange_rates()
-        if not rates:
+        if not self.__rates:
             raise ValueError("Failed to fetch exchange rates")
 
-        if from_currency not in rates:
+        if from_currency not in self.__rates:
             raise ValueError(f"Invalid currency code {from_currency}")
 
-        if to_currency not in rates:
+        if to_currency not in self.__rates:
             raise ValueError(f"Invalid currency code {to_currency}")
 
-        return round((rates[to_currency] / rates[from_currency]) * amount, 2)
+        return round((self.__rates[to_currency] / self.__rates[from_currency]) * amount, 2)
