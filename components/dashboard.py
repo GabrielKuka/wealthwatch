@@ -12,6 +12,28 @@ layout = dbc.Container(
             [
                 dbc.Col(
                     [
+                        dbc.Modal(
+                            [
+                                dbc.ModalHeader(
+                                    dbc.ModalTitle(
+                                        id="modal-title", children=""
+                                    ),
+                                    close_button=True,
+                                ),
+                                dbc.ModalBody(id="modal-message", children=""),
+                                dbc.ModalFooter(
+                                    dbc.Button(
+                                        "Close",
+                                        id="close-btn",
+                                        className="ms-auto",
+                                        n_clicks=0,
+                                    )
+                                ),
+                            ],
+                            id="modal",
+                            centered=True,
+                            is_open=False,
+                        ),
                         dash_table.DataTable(
                             id="recent_expenses",
                             style_header={
@@ -30,20 +52,6 @@ layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         [
-                            html.Div(
-                                children=[
-                                    dcc.DatePickerRange(
-                                        id="date_range",
-                                        min_date_allowed=date(2020, 1, 1),
-                                        start_date=date(
-                                            datetime.now().year,
-                                            datetime.now().month,
-                                            1,
-                                        ),
-                                        end_date=datetime.now(),
-                                    ),
-                                ],
-                            ),
                             dcc.Graph(id="expenses_bar_chart"),
                         ],
                         style={"display": "flex", "flexDirection": "column"},
@@ -57,16 +65,6 @@ layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         [
-                            dcc.DatePickerRange(
-                                id="purchases_by_currency_date_range",
-                                min_date_allowed=date(2020, 1, 1),
-                                start_date=date(
-                                    datetime.now().year - 1,
-                                    datetime.now().month,
-                                    datetime.now().day,
-                                ),
-                                end_date=datetime.now(),
-                            ),
                             dcc.Graph(id="purchases_by_currency_pie_chart"),
                         ],
                         style={"display": "flex", "flexDirection": "column"},
@@ -76,16 +74,6 @@ layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         [
-                            dcc.DatePickerRange(
-                                id="date_range_sankey",
-                                display_format="MM/YYYY",
-                                start_date=date(
-                                    datetime.now().year,
-                                    datetime.now().month,
-                                    1,
-                                ),
-                                end_date=datetime.now(),
-                            ),
                             html.Div(
                                 "Incomes vs Expenses for the selected timeframe."
                             ),

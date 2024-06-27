@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -31,6 +31,47 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.layout = layout.layout
 
 
+def invalid_date_range(start_date: str, end_date: str) -> bool:
+
+    start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+
+    return start_date_obj > end_date_obj
+
+
+@app.callback(
+    [
+        Output("modal-title", "children"),
+        Output("modal-message", "children"),
+        Output("modal", "is_open"),
+
+        Output("date_range", "start_date"),
+        Output("date_range", "end_date"),
+    ],
+    [
+        Input("date_range", "start_date"),
+        Input("date_range", "end_date"),
+    ],
+)
+def check_date_range(start_date, end_date):
+
+    if invalid_date_range(start_date, end_date):
+        return (
+            "Wrong Date Range",
+            f"Start date ({start_date}) cannot be more recent than end date ({end_date})",
+            True,
+
+            date(
+                datetime.now().year,
+                datetime.now().month,
+                1,
+            ),
+            date.today()
+        )
+
+    raise PreventUpdate
+
+
 @app.callback(
     [Output("users_dropdown", "options"), Output("users_dropdown", "value")],
     [Input("users_dropdown", "options")],
@@ -51,13 +92,16 @@ def populate_users_dropdown(arg):
     Output("purchases_by_currency_pie_chart", "figure"),
     [
         Input("users_dropdown", "value"),
-        Input("purchases_by_currency_date_range", "start_date"),
-        Input("purchases_by_currency_date_range", "end_date"),
+        Input("date_range", "start_date"),
+        Input("date_range", "end_date"),
     ],
 )
 def currency_pie_chart(selected_user, start_date, end_date):
 
     engine = create_engine(pg_connection_string)
+
+    if invalid_date_range(start_date, end_date):
+        raise PreventUpdate
 
     with engine.begin() as conn:
         query = text(
@@ -94,7 +138,7 @@ def currency_pie_chart(selected_user, start_date, end_date):
             df,
             names="currency",
             values="purchase_percentage",
-            title="Which currency is used for most purchases? (YoY)",
+            title="Which currency is used for most purchases?",
         )
 
         return fig
@@ -104,13 +148,16 @@ def currency_pie_chart(selected_user, start_date, end_date):
     Output("incomes_and_expenses_sankey", "figure"),
     [
         Input("users_dropdown", "value"),
-        Input("date_range_sankey", "start_date"),
-        Input("date_range_sankey", "end_date"),
+        Input("date_range", "start_date"),
+        Input("date_range", "end_date"),
         Input("currency_dropdown", "value"),
     ],
 )
 def incomes_and_expenses_sankey(selected_user, start_date, end_date, currency):
     if not (selected_user and start_date and end_date and currency):
+        raise PreventUpdate
+
+    if invalid_date_range(start_date, end_date):
         raise PreventUpdate
 
     engine = create_engine(pg_connection_string)
@@ -160,41 +207,42 @@ def incomes_and_expenses_sankey(selected_user, start_date, end_date, currency):
         )
 
         # Convert currencies
-        incomes_df[f"amount_{currency.lower()}"] = incomes_df.apply(
-            lambda row: currency_api.convert(
-                row["currency"], currency, row["amount"]
-            ),
-            axis=1,
-        )
-        expenses_df[f"amount_{currency.lower()}"] = expenses_df.apply(
-            lambda row: currency_api.convert(
-                row["currency"], currency, row["amount"]
-            ),
-            axis=1,
-        )
+        if not incomes_df.empty:
+            incomes_df[f"amount_{currency.lower()}"] = incomes_df.apply(
+                lambda row: currency_api.convert(
+                    row["currency"], currency, row["amount"]
+                ),
+                axis=1,
+            )
+            incomes_df = incomes_df.drop(columns=["amount"])
+            total_incomes = incomes_df[f"amount_{currency.lower()}"].sum()
 
-        incomes_df = incomes_df.drop(columns=["amount"])
-        expenses_df = expenses_df.drop(columns=["amount"])
+            incomes_df["category"] = incomes_df["category"].replace(
+                "Other", "Others"
+            )
 
-        # Total expenses and total incomes
-        total_incomes = incomes_df[f"amount_{currency.lower()}"].sum()
-        total_expenses = expenses_df[f"amount_{currency.lower()}"].sum()
+            incomes_by_category_df = (
+                incomes_df.groupby("category")[f"amount_{currency.lower()}"]
+                .sum()
+                .reset_index()
+            )
 
-        incomes_df["category"] = incomes_df["category"].replace(
-            "Other", "Others"
-        )
+        if not expenses_df.empty:
+            expenses_df[f"amount_{currency.lower()}"] = expenses_df.apply(
+                lambda row: currency_api.convert(
+                    row["currency"], currency, row["amount"]
+                ),
+                axis=1,
+            )
+            expenses_df = expenses_df.drop(columns=["amount"])
+            total_expenses = expenses_df[f"amount_{currency.lower()}"].sum()
 
-        # Incomes and expenses by category
-        incomes_by_category_df = (
-            incomes_df.groupby("category")[f"amount_{currency.lower()}"]
-            .sum()
-            .reset_index()
-        )
-        expenses_by_category_df = (
-            expenses_df.groupby("category")[f"amount_{currency.lower()}"]
-            .sum()
-            .reset_index()
-        )
+            # Expenses by category
+            expenses_by_category_df = (
+                expenses_df.groupby("category")[f"amount_{currency.lower()}"]
+                .sum()
+                .reset_index()
+            )
 
         nodes = (
             list(incomes_by_category_df["category"])
@@ -299,6 +347,9 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
     if not (selected_user and start_date and end_date and currency):
         raise PreventUpdate
 
+    if invalid_date_range(start_date, end_date):
+        raise PreventUpdate
+
     engine = create_engine(pg_connection_string)
 
     query = text(
@@ -360,6 +411,9 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
 )
 def recent_transactions(arg, selected_user, start_date, end_date):
 
+    if invalid_date_range(start_date, end_date):
+        raise PreventUpdate
+
     engine = create_engine(pg_connection_string)
 
     query = text(
@@ -395,4 +449,4 @@ if __name__ == "__main__":
 
     currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
-    app.run(debug=True, host="0.0.0.0", port=8992)
+    app.run(debug=True, host="0.0.0.0", port=8990)
