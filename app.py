@@ -449,4 +449,4 @@ if __name__ == "__main__":
 
     currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
-    app.run(debug=True, host="0.0.0.0", port=8990)
+    app.run(debug=True, host="0.0.0.0", port=8992)
