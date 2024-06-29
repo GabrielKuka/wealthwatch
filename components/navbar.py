@@ -1,6 +1,7 @@
+from datetime import date, datetime
+
 import dash_bootstrap_components as dbc
-from dash import html, dcc
-from datetime import datetime, date
+from dash import dcc, html
 
 navbar = dbc.Nav(
     id="navbar",

@@ -37,10 +37,10 @@ layout = dbc.Container(
                         dash_table.DataTable(
                             id="recent_expenses",
                             filter_action="native",
-                            filter_options={"case":"insensitive"},
+                            filter_options={"case": "insensitive"},
                             sort_action="native",
                             sort_mode="multi",
-                            style_filter={"background-color":"#8A98A1"},
+                            style_filter={"background-color": "#8A98A1"},
                             style_header={
                                 "font-weight": "bold",
                                 "text-transform": "uppercase",
@@ -48,7 +48,10 @@ layout = dbc.Container(
                                 "background-color": "#36454f",
                                 "color": "white",
                             },
-                            style_cell={"padding": "10px", "textAlign":"left"},
+                            style_cell={
+                                "padding": "10px",
+                                "textAlign": "left",
+                            },
                             page_size=10,
                         ),
                     ],

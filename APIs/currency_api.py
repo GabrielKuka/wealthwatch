@@ -1,5 +1,7 @@
+import threading
+import time
+
 import requests
-import threading, time
 
 
 class CurrencyAPI:
@@ -11,15 +13,17 @@ class CurrencyAPI:
         )
         self.__rates = self._get_exchange_rates()
 
-        self._refresh_rates_thread = threading.Thread(target=self._refresh_exchange_rates, daemon=True)
+        self._refresh_rates_thread = threading.Thread(
+            target=self._refresh_exchange_rates, daemon=True
+        )
         self._refresh_rates_thread.start()
-    
+
     def _refresh_exchange_rates(self):
         # Refresh exchange rates every 4 hours
         while True:
             time.sleep(4 * 60 * 60)
             self.__rates = self._get_exchange_rates()
-    
+
     def _get_exchange_rates(self):
         try:
             response = requests.get(self.__ENDPOINT)
@@ -44,4 +48,7 @@ class CurrencyAPI:
         if to_currency not in self.__rates:
             raise ValueError(f"Invalid currency code {to_currency}")
 
-        return round((self.__rates[to_currency] / self.__rates[from_currency]) * amount, 2)
+        return round(
+            (self.__rates[to_currency] / self.__rates[from_currency]) * amount,
+            2,
+        )

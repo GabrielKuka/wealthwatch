@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, date
+from datetime import date, datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -24,7 +24,7 @@ pg_connection_string = (
     f"postgresql://{username}:{password}@{host}:{port}/{dbname}"
 )
 
-#currency_api = None
+# currency_api = None
 currency_api = CurrencyAPI(os.getenv("CURRENCY_API"))
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -39,6 +39,7 @@ def invalid_date_range(start_date: str, end_date: str) -> bool:
 
     return start_date_obj > end_date_obj
 
+
 def get_empty_figure() -> go.Figure:
     fig = go.Figure()
     fig.add_annotation(
@@ -48,14 +49,14 @@ def get_empty_figure() -> go.Figure:
         showarrow=False,
         font=dict(size=20),
         xref="paper",
-        yref="paper"
+        yref="paper",
     )
     # Adjust the layout to center the text
     fig.update_layout(
         xaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
-        template='plotly_white'
-    ) 
+        template="plotly_white",
+    )
     return fig
 
 
@@ -64,7 +65,6 @@ def get_empty_figure() -> go.Figure:
         Output("modal-title", "children"),
         Output("modal-message", "children"),
         Output("modal", "is_open"),
-
         Output("date_range", "start_date"),
         Output("date_range", "end_date"),
     ],
@@ -80,13 +80,12 @@ def check_date_range(start_date, end_date):
             "Wrong Date Range",
             f"Start date ({start_date}) cannot be more recent than end date ({end_date})",
             True,
-
             date(
                 datetime.now().year,
                 datetime.now().month,
                 1,
             ),
-            date.today()
+            date.today(),
         )
 
     raise PreventUpdate
@@ -480,4 +479,4 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8990)
+    app.run(debug=True, host="0.0.0.0", port=8992)
