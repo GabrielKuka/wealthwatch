@@ -39,6 +39,25 @@ def invalid_date_range(start_date: str, end_date: str) -> bool:
 
     return start_date_obj > end_date_obj
 
+def get_empty_figure() -> go.Figure:
+    fig = go.Figure()
+    fig.add_annotation(
+        x=0.5,
+        y=0.5,
+        text="No Data Aavailable",
+        showarrow=False,
+        font=dict(size=20),
+        xref="paper",
+        yref="paper"
+    )
+    # Adjust the layout to center the text
+    fig.update_layout(
+        xaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=True, zeroline=False, showticklabels=False),
+        template='plotly_white'
+    ) 
+    return fig
+
 
 @app.callback(
     [
@@ -135,6 +154,9 @@ def currency_pie_chart(selected_user, start_date, end_date):
             },
         )
 
+        if df.empty:
+            return get_empty_figure()
+
         fig = px.pie(
             df,
             names="currency",
@@ -206,6 +228,9 @@ def incomes_and_expenses_sankey(selected_user, start_date, end_date, currency):
                 "end_date": end_date,
             },
         )
+
+        if expenses_df.empty and incomes_df.empty:
+            return get_empty_figure()
 
         # Convert currencies
         if not incomes_df.empty:
@@ -377,6 +402,9 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
             },
         )
 
+        if df.empty:
+            return get_empty_figure()
+
         df[f"amount_{currency.lower()}"] = df.apply(
             lambda row: currency_api.convert(
                 row["currency"], currency, row["amount"]
@@ -440,6 +468,10 @@ def recent_transactions(arg, selected_user, start_date, end_date):
                 "end_date": end_date,
             },
         )
+
+        if df.empty:
+            empty_row = pd.DataFrame([["No Data"] * 5], columns=df.columns)
+            df = pd.concat([df, empty_row], ignore_index=True)
 
         return df.to_dict("records"), [
             {"name": i, "id": i} for i in df.columns
