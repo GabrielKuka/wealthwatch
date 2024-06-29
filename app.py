@@ -419,7 +419,7 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 
     query = text(
         """ 
-            SELECT u.name, t.description, t.amount, a.currency, c.category, t.date FROM fact_transactions AS t 
+            SELECT t.description, t.amount, a.currency, c.category, t.date FROM fact_transactions AS t 
             INNER JOIN dim_user AS u ON u.id = t.user_id 
             INNER JOIN dim_account AS a ON a.id = t.from_account_id
             INNER JOIN dim_category AS c ON c.id = t.category_id
@@ -448,4 +448,4 @@ def recent_transactions(arg, selected_user, start_date, end_date):
 
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8992)
+    app.run(debug=True, host="0.0.0.0", port=8990)
