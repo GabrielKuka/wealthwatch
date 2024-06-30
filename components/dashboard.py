@@ -52,10 +52,12 @@ layout = dbc.Container(
                                 "padding": "10px",
                                 "textAlign": "left",
                             },
-                            style_cell_conditional=[{
-                                "if":{'column_id':"currency"},
-                                "width":"20px",
-                            }],
+                            style_cell_conditional=[
+                                {
+                                    "if": {"column_id": "currency"},
+                                    "width": "20px",
+                                }
+                            ],
                             page_size=10,
                         ),
                     ],
@@ -103,15 +105,18 @@ layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                        [
-                            dcc.Graph(id="expenses_bar_chart"),
-                        ],
+                    [
+                        dcc.Graph(id="expenses_bar_chart"),
+                    ],
                     width="4",
                 ),
                 dbc.Col(
-                        [
-                            dcc.Graph(id="incomes_and_expenses_sankey", style={"padding":"0"}),
-                        ],
+                    [
+                        dcc.Graph(
+                            id="incomes_and_expenses_sankey",
+                            style={"padding": "0"},
+                        ),
+                    ],
                     width=8,
                 ),
             ]

@@ -156,12 +156,17 @@ def currency_pie_chart(selected_user, start_date, end_date):
 
         if df.empty:
             return get_empty_figure()
+        
+        df['purchase_percentage'] = df['purchase_percentage'].round(2)
 
         fig = px.pie(
             df,
             names="currency",
             values="purchase_percentage",
             title="Which currency is used for most purchases?",
+        )
+        fig.update_layout(
+            margin=dict(l=10, r=10, b=25, t=25)
         )
 
         return fig
@@ -425,11 +430,16 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
 
         fig = go.Figure()
         fig.add_trace(
-            go.Bar(x=df["category"], y=df[f"amount_{currency.lower()}"])
+            go.Bar(
+                x=df["category"],
+                y=df[f"amount_{currency.lower()}"],
+                hovertemplate=f"<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>",
+            )
         )
         fig.update_layout(
             margin=dict(l=0, r=0, b=0, t=35),
-            title="Expenses by Category", yaxis=dict(tickformat=",")
+            title="Expenses by Category",
+            yaxis=dict(tickformat=","),
         )
 
         return fig
@@ -577,7 +587,7 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
             y=daily_expenses[f"amount_{currency.lower()}"],
             mode="lines",
             name="Daily Expenses",
-            hovertemplate=f'<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>'
+            hovertemplate=f"<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>",
         )
     )
 
@@ -587,7 +597,7 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
             x=daily_expenses["date"],
             y=daily_expenses["moving_average"],
             mode="lines",
-            hovertemplate=f'<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>'
+            hovertemplate=f"<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>",
         )
     )
 
@@ -601,17 +611,19 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
         margin=dict(l=0, r=0, t=0, b=0),
         yaxis=dict(gridcolor="#DADADA"),
         annotations=[
-        dict(
-            x=daily_expenses['date'].iloc[-1],
-            y=daily_expenses['moving_average'].iloc[-1],
-            xref='x', yref='y',
-            text=f"Current Moving Avg: {round(daily_expenses['moving_average'].iloc[-1], 2)} {helper.SYMBOLS[currency]}",
-            showarrow=True,
-            arrowhead=7,
-            ax=-50, ay=-60
-        )
+            dict(
+                x=daily_expenses["date"].iloc[-1],
+                y=daily_expenses["moving_average"].iloc[-1],
+                xref="x",
+                yref="y",
+                text=f"Current Moving Avg: {round(daily_expenses['moving_average'].iloc[-1], 2)} {helper.SYMBOLS[currency]}",
+                showarrow=True,
+                arrowhead=7,
+                ax=-50,
+                ay=-60,
+            )
         ],
-        #xaxis=dict(
+        # xaxis=dict(
         #    rangeselector=dict(
         #        buttons=list([
         #            dict(count=1, label='1m', step='month', stepmode='backward'),
@@ -623,7 +635,7 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
         #    ),
         #    #rangeslider=dict(visible=True),
         #    #type='date'
-        #)
+        # )
     )
 
     return fig
@@ -631,4 +643,4 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
 
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8990)
+    app.run(debug=True, host="0.0.0.0", port=8992)
