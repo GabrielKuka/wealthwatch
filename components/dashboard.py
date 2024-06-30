@@ -9,7 +9,7 @@ layout = dbc.Container(
     fluid=True,
     children=[
         dbc.Row(
-            [
+            children=[
                 dbc.Col(
                     [
                         dbc.Modal(
@@ -52,50 +52,80 @@ layout = dbc.Container(
                                 "padding": "10px",
                                 "textAlign": "left",
                             },
+                            style_cell_conditional=[{
+                                "if":{'column_id':"currency"},
+                                "width":"20px",
+                            }],
                             page_size=10,
                         ),
                     ],
-                    width="8",
+                    width="7",
                 ),
                 dbc.Col(
-                    html.Div(
-                        [
-                            dcc.Graph(id="expenses_bar_chart"),
-                        ],
-                        style={"display": "flex", "flexDirection": "column"},
-                    ),
-                    width="4",
+                    [
+                        html.Div(
+                            children=[
+                                dash_table.DataTable(
+                                    id="expenses_aggs",
+                                    columns=[
+                                        {"name": "Measure", "id": "measure"},
+                                        {"name": "Value", "id": "value"},
+                                    ],
+                                    style_cell={
+                                        "textAlign": "left",
+                                        "width": "60px",
+                                        "maxWidth": "80px",
+                                    },
+                                    style_header={
+                                        "font-weight": "bold",
+                                        "text-transform": "uppercase",
+                                        "text-align": "left",
+                                        "background-color": "#36454f",
+                                        "color": "white",
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="expenses_line_chart",
+                                    style={"padding": "0"},
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "flexDirection": "column",
+                                "gap": "5px",
+                                "height": "100px",
+                            },
+                        )
+                    ]
                 ),
-            ]
+            ],
         ),
         dbc.Row(
             [
                 dbc.Col(
-                    html.Div(
                         [
-                            dcc.Graph(id="purchases_by_currency_pie_chart"),
+                            dcc.Graph(id="expenses_bar_chart"),
                         ],
-                        style={"display": "flex", "flexDirection": "column"},
-                    ),
-                    width=4,
+                    width="4",
                 ),
                 dbc.Col(
-                    html.Div(
                         [
-                            html.Div(
-                                "Incomes vs Expenses for the selected timeframe."
-                            ),
-                            dcc.Graph(id="incomes_and_expenses_sankey"),
+                            dcc.Graph(id="incomes_and_expenses_sankey", style={"padding":"0"}),
                         ],
-                        style={
-                            "display": "flex",
-                            "flexDirection": "column",
-                            "gap": "10px",
-                        },
-                    ),
                     width=8,
                 ),
             ]
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.Div(
+                    [
+                        dcc.Graph(id="purchases_by_currency_pie_chart"),
+                    ],
+                    style={"display": "flex", "flexDirection": "column"},
+                ),
+                width=4,
+            ),
         ),
     ],
 )

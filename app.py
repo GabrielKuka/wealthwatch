@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, text
 
 from APIs.currency_api import CurrencyAPI
 from components import layout
+import helper
 
 # Warehouse connection
 username = os.getenv("WEALTHWATCH_PG_USERNAME")
@@ -356,6 +357,11 @@ def incomes_and_expenses_sankey(selected_user, start_date, end_date, currency):
             ]
         )
 
+        fig.update_layout(
+            height=350,
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
     return fig
 
 
@@ -422,7 +428,8 @@ def expenses_by_category_chart(selected_user, currency, start_date, end_date):
             go.Bar(x=df["category"], y=df[f"amount_{currency.lower()}"])
         )
         fig.update_layout(
-            title="Expenses by category", yaxis=dict(tickformat=",")
+            margin=dict(l=0, r=0, b=0, t=35),
+            title="Expenses by Category", yaxis=dict(tickformat=",")
         )
 
         return fig
@@ -477,6 +484,151 @@ def recent_transactions(arg, selected_user, start_date, end_date):
         ]
 
 
+@app.callback(
+    Output("expenses_aggs", "data"),
+    [
+        Input("recent_expenses", "derived_virtual_data"),
+        Input("currency_dropdown", "value"),
+    ],
+)
+def expenses_aggs(expenses, currency):
+    if not (expenses and currency):
+        raise PreventUpdate
+
+    expenses_df = pd.DataFrame(expenses)
+
+    expenses_df[f"amount_{currency.lower()}"] = expenses_df.apply(
+        lambda x: currency_api.convert(x["currency"], currency, x["amount"]),
+        axis=1,
+    )
+
+    values = expenses_df[f"amount_{currency.lower()}"]
+
+    result = [
+        {
+            "measure": "Total",
+            "value": f"{round(values.sum(), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {
+            "measure": "Mean",
+            "value": f"{round(values.mean(), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {
+            "measure": "25% Quantile",
+            "value": f"{round(values.quantile(0.25), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {
+            "measure": "50% Quantile (Median)",
+            "value": f"{round(values.quantile(0.50), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {
+            "measure": "75% Quantile",
+            "value": f"{round(values.quantile(0.75), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {
+            "measure": "Min, Max",
+            "value": f"{round(values.min(), 2)} {helper.SYMBOLS[currency]}, {round(values.max(), 2)} {helper.SYMBOLS[currency]}",
+        },
+        {"measure": "# of Expenses", "value": values.count()},
+    ]
+
+    return result
+
+
+@app.callback(
+    Output("expenses_line_chart", "figure"),
+    [
+        Input("recent_expenses", "derived_virtual_data"),
+        Input("currency_dropdown", "value"),
+    ],
+    [
+        State("date_range", "start_date"),
+        State("date_range", "end_date"),
+    ],
+)
+def expenses_line_chart(expenses, currency, start_date, end_date):
+    if not (expenses and currency):
+        raise PreventUpdate
+
+    expenses_df = pd.DataFrame(expenses)
+
+    expenses_df[f"amount_{currency.lower()}"] = expenses_df.apply(
+        lambda x: currency_api.convert(x["currency"], currency, x["amount"]),
+        axis=1,
+    )
+    expenses_df["date"] = pd.to_datetime(expenses_df["date"])
+    daily_expenses = (
+        expenses_df.groupby(expenses_df["date"].dt.date)[
+            f"amount_{currency.lower()}"
+        ]
+        .sum()
+        .reset_index()
+    )
+    daily_expenses["moving_average"] = (
+        daily_expenses[f"amount_{currency.lower()}"].rolling(window=5).mean()
+    )
+
+    fig = go.Figure()
+
+    # Sum of daily expenses
+    fig.add_trace(
+        go.Scatter(
+            x=daily_expenses["date"],
+            y=daily_expenses[f"amount_{currency.lower()}"],
+            mode="lines",
+            name="Daily Expenses",
+            hovertemplate=f'<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>'
+        )
+    )
+
+    # 5 day moving average
+    fig.add_trace(
+        go.Scatter(
+            x=daily_expenses["date"],
+            y=daily_expenses["moving_average"],
+            mode="lines",
+            hovertemplate=f'<span>%{{x}}:</span> <b>%{{y:.2f}} {helper.SYMBOLS[currency]}</b><extra></extra>'
+        )
+    )
+
+    fig.update_layout(
+        height=350,
+        width=610,
+        plot_bgcolor="white",
+        showlegend=False,
+        xaxis_title="",
+        yaxis_title=f"Amount ({helper.SYMBOLS[currency]})",
+        margin=dict(l=0, r=0, t=0, b=0),
+        yaxis=dict(gridcolor="#DADADA"),
+        annotations=[
+        dict(
+            x=daily_expenses['date'].iloc[-1],
+            y=daily_expenses['moving_average'].iloc[-1],
+            xref='x', yref='y',
+            text=f"Current Moving Avg: {round(daily_expenses['moving_average'].iloc[-1], 2)} {helper.SYMBOLS[currency]}",
+            showarrow=True,
+            arrowhead=7,
+            ax=-50, ay=-60
+        )
+        ],
+        #xaxis=dict(
+        #    rangeselector=dict(
+        #        buttons=list([
+        #            dict(count=1, label='1m', step='month', stepmode='backward'),
+        #            dict(count=6, label='6m', step='month', stepmode='backward'),
+        #            dict(count=1, label='YTD', step='year', stepmode='todate'),
+        #            dict(count=1, label='1y', step='year', stepmode='backward'),
+        #            dict(step='all')
+        #        ])
+        #    ),
+        #    #rangeslider=dict(visible=True),
+        #    #type='date'
+        #)
+    )
+
+    return fig
+
+
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8992)
+    app.run(debug=True, host="0.0.0.0", port=8990)
