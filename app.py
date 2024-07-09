@@ -1,17 +1,17 @@
 import os
-from datetime import date, datetime
+from datetime import datetime, date
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, dash_table, html, no_update
+from dash import Dash, Input, Output, State, dcc
 from dash.exceptions import PreventUpdate
 from sqlalchemy import create_engine, text
 
+import helper
 from APIs.currency_api import CurrencyAPI
 from components import layout
-import helper
 
 # Warehouse connection
 username = os.getenv("WEALTHWATCH_PG_USERNAME")
@@ -60,37 +60,19 @@ def get_empty_figure() -> go.Figure:
     )
     return fig
 
-
 @app.callback(
     [
-        Output("modal-title", "children"),
-        Output("modal-message", "children"),
-        Output("modal", "is_open"),
         Output("date_range", "start_date"),
         Output("date_range", "end_date"),
     ],
-    [
-        Input("date_range", "start_date"),
-        Input("date_range", "end_date"),
-    ],
+    Input("url", "pathname")
 )
-def check_date_range(start_date, end_date):
+def update_date_range(pathname: str):
+    today = date.today()
+    start_date = date(today.year, today.month, 1) 
+    end_date = today
 
-    if invalid_date_range(start_date, end_date):
-        return (
-            "Wrong Date Range",
-            f"Start date ({start_date}) cannot be more recent than end date ({end_date})",
-            True,
-            date(
-                datetime.now().year,
-                datetime.now().month,
-                1,
-            ),
-            date.today(),
-        )
-
-    raise PreventUpdate
-
+    return start_date, end_date
 
 @app.callback(
     [Output("users_dropdown", "options"), Output("users_dropdown", "value")],
@@ -156,8 +138,8 @@ def currency_pie_chart(selected_user, start_date, end_date):
 
         if df.empty:
             return get_empty_figure()
-        
-        df['purchase_percentage'] = df['purchase_percentage'].round(2)
+
+        df["purchase_percentage"] = df["purchase_percentage"].round(2)
 
         fig = px.pie(
             df,
@@ -165,9 +147,7 @@ def currency_pie_chart(selected_user, start_date, end_date):
             values="purchase_percentage",
             title="Which currency is used for most purchases?",
         )
-        fig.update_layout(
-            margin=dict(l=10, r=10, b=25, t=25)
-        )
+        fig.update_layout(margin=dict(l=10, r=10, b=25, t=25))
 
         return fig
 
@@ -643,4 +623,4 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
 
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8992)
+    app.run(debug=True, host="0.0.0.0", port=8990)

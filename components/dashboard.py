@@ -12,28 +12,6 @@ layout = dbc.Container(
             children=[
                 dbc.Col(
                     [
-                        dbc.Modal(
-                            [
-                                dbc.ModalHeader(
-                                    dbc.ModalTitle(
-                                        id="modal-title", children=""
-                                    ),
-                                    close_button=True,
-                                ),
-                                dbc.ModalBody(id="modal-message", children=""),
-                                dbc.ModalFooter(
-                                    dbc.Button(
-                                        "Close",
-                                        id="close-btn",
-                                        className="ms-auto",
-                                        n_clicks=0,
-                                    )
-                                ),
-                            ],
-                            id="modal",
-                            centered=True,
-                            is_open=False,
-                        ),
                         dash_table.DataTable(
                             id="recent_expenses",
                             filter_action="native",
