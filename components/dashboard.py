@@ -9,6 +9,7 @@ layout = dbc.Container(
     fluid=True,
     children=[
         dbc.Row(
+            style={"minHeight": "600px", "margin-left": "0"},
             children=[
                 dbc.Col(
                     [
@@ -19,6 +20,7 @@ layout = dbc.Container(
                             sort_action="native",
                             sort_mode="multi",
                             style_filter={"background-color": "#8A98A1"},
+                            style_table={"overflowX": "auto"},
                             style_header={
                                 "font-weight": "bold",
                                 "text-transform": "uppercase",
@@ -34,12 +36,12 @@ layout = dbc.Container(
                                 {
                                     "if": {"column_id": "currency"},
                                     "width": "20px",
-                                }
+                                },
                             ],
                             page_size=10,
                         ),
                     ],
-                    width="7",
+                    width=7,
                 ),
                 dbc.Col(
                     [
@@ -73,10 +75,11 @@ layout = dbc.Container(
                                 "display": "flex",
                                 "flexDirection": "column",
                                 "gap": "5px",
-                                "height": "100px",
+                                "minHeight": "100px",
                             },
                         )
-                    ]
+                    ],
+                    width=5,
                 ),
             ],
         ),

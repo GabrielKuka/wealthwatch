@@ -60,19 +60,21 @@ def get_empty_figure() -> go.Figure:
     )
     return fig
 
+
 @app.callback(
     [
         Output("date_range", "start_date"),
         Output("date_range", "end_date"),
     ],
-    Input("url", "pathname")
+    Input("url", "pathname"),
 )
 def update_date_range(pathname: str):
     today = date.today()
-    start_date = date(today.year, today.month, 1) 
+    start_date = date(today.year, today.month, 1)
     end_date = today
 
     return start_date, end_date
+
 
 @app.callback(
     [Output("users_dropdown", "options"), Output("users_dropdown", "value")],
@@ -623,4 +625,4 @@ def expenses_line_chart(expenses, currency, start_date, end_date):
 
 if __name__ == "__main__":
 
-    app.run(debug=True, host="0.0.0.0", port=8990)
+    app.run(debug=True, host="0.0.0.0", port=8992)
